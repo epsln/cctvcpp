@@ -149,9 +149,9 @@ int main(int argc, char* argv[]) {
     pipeline.set_uniform("grade",    "uSaturation",  UniformValue::from_float(1.3f));
     pipeline.set_uniform("grade",    "uContrast",    UniformValue::from_float(1.1f));
     pipeline.set_uniform("grade",    "uHueShift",    UniformValue::from_float(5.0f));
-    pipeline.set_uniform("bloom_fx", "uThreshold",   UniformValue::from_float(0.55f));
-    pipeline.set_uniform("bloom_fx", "uIntensity",   UniformValue::from_float(1.2f));
-    pipeline.set_uniform("bloom_fx", "uRadius",      UniformValue::from_int(6));
+    pipeline.set_uniform("bloom_fx", "uThreshold",   UniformValue::from_float(0.65f));
+    pipeline.set_uniform("bloom_fx", "uIntensity",   UniformValue::from_float(0.2f));
+    pipeline.set_uniform("bloom_fx", "uRadius",      UniformValue::from_int(2));
 
     // ─── Video source ─────────────────────────
     VideoSource source;
