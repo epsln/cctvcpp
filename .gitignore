@@ -1,0 +1,7 @@
+*.swp
+*.swo
+*.mp4
+cmake_install.cmake
+CMakeCache/
+CMakeFiles/
+build/
