@@ -104,6 +104,19 @@ def r_crowd(state: EngineState) -> float:
     # Perfect match → 1.0; complete mismatch → -1.0
     return float(1.0 - 2.0 * mismatch)
 
+def r_activity(time_c) -> float:
+    """
+    Reward for doing stuff 
+    """
+    return min(-np.tanh(time_c/1000), 0)
+
+def r_valid(time_c) -> float:
+    """
+    Reward for adding pass that are not already present
+    Penalty for removing passes that do no exist
+    """
+    return min(-np.tanh(time_c/1000), 0)
+
 
 def r_perf(state: EngineState, target_ms: float = 33.3) -> float:
     """Small penalty for frame drops. 0 at 60fps, -1 at 3× frametime."""
@@ -119,8 +132,9 @@ def r_perf(state: EngineState, target_ms: float = 33.3) -> float:
 
 @dataclass
 class RewardWeights:
-    source:       float = 2.0   # continuity is the primary task
-    flicker:      float = 1.5   # stability matters a lot
+    source:       float = 1.0   # continuity is the primary task
+    flicker:      float = 0.5   # stability matters a lot
+    activity:     float = 2.0   # Reward for doing stuff sometimes 
     crowd:        float = 0.5   # crowd matching is nice-to-have
     perf:         float = 0.3
 
@@ -144,10 +158,13 @@ def compute_low_level_reward(
     components = {
         "source":  r_source(state, prev_state)  * weights.source,
         "flicker": flicker.penalty()             * weights.flicker,
+        "activity": r_activity(state.last_ll_t)             * weights.activity,
+        "valid":  r_valid(state, prev_state)             * weights.activity,
         "crowd":   r_crowd(state)                * weights.crowd,
         "perf":    r_perf(state)                 * weights.perf,
     }
     total = sum(components.values())
+
     return total, components
 
 
@@ -167,6 +184,7 @@ def compute_high_level_reward(
     components = {
         "source":  r_source(state, prev_state)  * weights.source,
         "flicker": flicker.penalty(threshold=0.1) * weights.flicker,  # stricter
+        "activity": r_activity(state.last_hl_t)             * weights.activity,
         "crowd":   r_crowd(state)                * (weights.crowd * 0.3),
         "perf":    r_perf(state)                 * weights.perf,
     }

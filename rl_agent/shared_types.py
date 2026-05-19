@@ -44,6 +44,9 @@ class EngineState:
     active_passes:  int   = 0
     passes:         list  = field(default_factory=list)  # list[PassState dicts]
 
+    last_ll_t:      float = 0.0 # time since last low level change
+    last_hl_t:      float = 0.0 # time since last highlevel change
+
     # Crowd
     energy:         float = 0.0
     density:        float = 0.0

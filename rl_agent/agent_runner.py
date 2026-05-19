@@ -87,6 +87,7 @@ def main():
             # ── 1. Read state ──────────────────────────────────────────────
             new_state = read_state(args.state_json)
             if new_state is not None and new_state.frame_number != last_frame:
+                new_state.last_ll_t = state.last_ll_t
                 state      = new_state
                 last_frame = state.frame_number
                 high.observe(state)   # keep history buffer fresh
@@ -104,6 +105,9 @@ def main():
                     write_commands(args.cmd_json, batch)
                     print(f"[Runner] LowLevel → {len(batch.commands)} command(s): "
                           + ", ".join(c.get("type","?") for c in batch.commands))
+                    state.last_ll_t = 0
+                else:
+                    state.last_ll_t += 100
 
             # ── 4. Rate-limit ──────────────────────────────────────────────
             elapsed = time.time() - loop_start

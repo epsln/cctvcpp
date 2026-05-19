@@ -154,10 +154,15 @@ def train_low_level(episodes: int, steps_per_ep: int, save_path: str):
         flicker     = FlickerTracker(alpha=0.2)
         ep_reward   = 0.0
         prev_state  = state
+        last_action = None
 
         for step in range(steps_per_ep):
             obs    = base_features(state)
             action, _, _ = policy.act(obs)
+            if action is not last_action:
+                state.last_ll_t = 0
+            state.last_ll_t += step
+            last_action = action
 
             # Translate action to command list (same logic as LowLevelAgent)
             _dummy = LowLevelAgent.__new__(LowLevelAgent)
@@ -168,6 +173,7 @@ def train_low_level(episodes: int, steps_per_ep: int, save_path: str):
             cmd_dicts = [c.to_dict() for c in cmds]
 
             next_state = env.step(cmd_dicts)
+            next_state.last_ll_t = state.last_ll_t
             next_obs   = base_features(next_state)
 
             reward, _ = compute_low_level_reward(
@@ -182,6 +188,7 @@ def train_low_level(episodes: int, steps_per_ep: int, save_path: str):
 
             prev_state = state
             state      = next_state
+
 
         ep_rewards.append(ep_reward)
         if ep % 50 == 0:
@@ -203,6 +210,8 @@ def train_high_level(episodes: int, steps_per_ep: int, save_path: str):
     flicker = FlickerTracker(alpha=0.05)
 
     ep_rewards = []
+    t_change = -1 
+    last_action = None
     for ep in range(episodes):
         state        = env.reset()
         history      = HistoryBuffer()
@@ -215,6 +224,10 @@ def train_high_level(episodes: int, steps_per_ep: int, save_path: str):
             history.push(state)
             obs    = history.as_vector()
             action, _, _ = policy.act(obs)
+            if action is not last_action:
+                state.last_hl_t = 0
+            last_action = action
+            state.last_hl_t += step
 
             # High-level: no direct commands to env, just advance env a few low steps
             for _ in range(20):   # ~10s of low-level steps
