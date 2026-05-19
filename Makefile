@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named vjengine
+# Target rules for targets named cctvcpp
 
 # Build rule for target.
-vjengine: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vjengine
-.PHONY : vjengine
+cctvcpp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cctvcpp
+.PHONY : cctvcpp
 
 # fast build rule for target.
-vjengine/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/build
-.PHONY : vjengine/fast
+cctvcpp/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/build
+.PHONY : cctvcpp/fast
 
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
 # target to build an object file
 src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/main.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -142,7 +142,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -150,7 +150,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 src/render_pipeline.o: src/render_pipeline.cpp.o
@@ -158,7 +158,7 @@ src/render_pipeline.o: src/render_pipeline.cpp.o
 
 # target to build an object file
 src/render_pipeline.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/render_pipeline.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/render_pipeline.cpp.o
 .PHONY : src/render_pipeline.cpp.o
 
 src/render_pipeline.i: src/render_pipeline.cpp.i
@@ -166,7 +166,7 @@ src/render_pipeline.i: src/render_pipeline.cpp.i
 
 # target to preprocess a source file
 src/render_pipeline.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/render_pipeline.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/render_pipeline.cpp.i
 .PHONY : src/render_pipeline.cpp.i
 
 src/render_pipeline.s: src/render_pipeline.cpp.s
@@ -174,7 +174,7 @@ src/render_pipeline.s: src/render_pipeline.cpp.s
 
 # target to generate assembly for a file
 src/render_pipeline.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/render_pipeline.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/render_pipeline.cpp.s
 .PHONY : src/render_pipeline.cpp.s
 
 src/shader_manager.o: src/shader_manager.cpp.o
@@ -182,7 +182,7 @@ src/shader_manager.o: src/shader_manager.cpp.o
 
 # target to build an object file
 src/shader_manager.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/shader_manager.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/shader_manager.cpp.o
 .PHONY : src/shader_manager.cpp.o
 
 src/shader_manager.i: src/shader_manager.cpp.i
@@ -190,7 +190,7 @@ src/shader_manager.i: src/shader_manager.cpp.i
 
 # target to preprocess a source file
 src/shader_manager.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/shader_manager.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/shader_manager.cpp.i
 .PHONY : src/shader_manager.cpp.i
 
 src/shader_manager.s: src/shader_manager.cpp.s
@@ -198,7 +198,7 @@ src/shader_manager.s: src/shader_manager.cpp.s
 
 # target to generate assembly for a file
 src/shader_manager.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/shader_manager.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/shader_manager.cpp.s
 .PHONY : src/shader_manager.cpp.s
 
 src/video_source.o: src/video_source.cpp.o
@@ -206,7 +206,7 @@ src/video_source.o: src/video_source.cpp.o
 
 # target to build an object file
 src/video_source.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/video_source.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/video_source.cpp.o
 .PHONY : src/video_source.cpp.o
 
 src/video_source.i: src/video_source.cpp.i
@@ -214,7 +214,7 @@ src/video_source.i: src/video_source.cpp.i
 
 # target to preprocess a source file
 src/video_source.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/video_source.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/video_source.cpp.i
 .PHONY : src/video_source.cpp.i
 
 src/video_source.s: src/video_source.cpp.s
@@ -222,7 +222,7 @@ src/video_source.s: src/video_source.cpp.s
 
 # target to generate assembly for a file
 src/video_source.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vjengine.dir/build.make CMakeFiles/vjengine.dir/src/video_source.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cctvcpp.dir/build.make CMakeFiles/cctvcpp.dir/src/video_source.cpp.s
 .PHONY : src/video_source.cpp.s
 
 # Help Target
@@ -233,7 +233,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... vjengine"
+	@echo "... cctvcpp"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

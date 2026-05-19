@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(vjengine CXX)
+project(cctvcpp CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,10 +24,10 @@ set(SOURCES
     src/render_pipeline.cpp
 )
 
-add_executable(vjengine ${SOURCES})
+add_executable(cctvcpp ${SOURCES})
 
 # ─── Include dirs ────────────────────────────────────────
-target_include_directories(vjengine PRIVATE
+target_include_directories(cctvcpp PRIVATE
     src/
     ${SDL2_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
@@ -38,7 +38,7 @@ target_include_directories(vjengine PRIVATE
 )
 
 # ─── Link libs ───────────────────────────────────────────
-target_link_libraries(vjengine PRIVATE
+target_link_libraries(cctvcpp PRIVATE
     ${SDL2_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${OPENGL_LIBRARIES}
@@ -49,15 +49,15 @@ target_link_libraries(vjengine PRIVATE
     pthread
 )
 
-target_compile_options(vjengine PRIVATE
+target_compile_options(cctvcpp PRIVATE
     ${SDL2_CFLAGS_OTHER}
     -O2 -Wall -Wextra
 )
 
 # ─── Copy shaders next to binary ─────────────────────────
-add_custom_command(TARGET vjengine POST_BUILD
+add_custom_command(TARGET cctvcpp POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/shaders
-        $<TARGET_FILE_DIR:vjengine>/shaders
+        $<TARGET_FILE_DIR:cctvcpp>/shaders
     COMMENT "Copying shaders"
 )
