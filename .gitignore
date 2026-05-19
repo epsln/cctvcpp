@@ -1,7 +1,8 @@
 *.swp
 *.swo
 *.mp4
+cctvcpp
 cmake_install.cmake
-CMakeCache/
+CMakeCache.txt
 CMakeFiles/
 build/
