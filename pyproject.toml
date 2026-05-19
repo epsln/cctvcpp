@@ -1,0 +1,17 @@
+[project]
+name = "cctvcpp"
+version = "0.1.0"
+description = "VJing Engine powered by a RL agent learning visualisation behaviors"
+authors = [
+    {name = "epsilon",email = "martin.olivier1997@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy (>=2.4.6,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
