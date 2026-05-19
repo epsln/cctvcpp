@@ -39,6 +39,10 @@ public:
     bool is_open() const { return m_open; }
     const std::string& path() const { return m_path; }
 
+    // Playback position / duration (approximate)
+    double pos_sec() const { return m_last_pts_gl; }   // last PTS shown on GL thread
+    double dur_sec() const { return m_duration_sec; }  // container duration (0 if unknown)
+
 private:
     void decode_loop();
 
@@ -69,4 +73,6 @@ private:
     double m_playback_start_wall = 0.0;  // SDL_GetTicks64 at open (GL thread only — never written by worker)
     double m_last_pts = 0.0;
     double m_loop_pts_base = 0.0;        // unused externally; bookkeeping in decode_loop
+    double m_last_pts_gl   = 0.0;        // updated by upload_next_frame — tracks display position
+    double m_duration_sec  = 0.0;        // filled from container after open()
 };

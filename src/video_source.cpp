@@ -67,7 +67,13 @@ bool VideoSource::open(const std::string& path) {
     m_running = true;
     m_playback_start_wall = wall_time_sec();
     m_last_pts      = 0.0;
-    m_loop_pts_base = 0.0;   // accumulated PTS offset across loops
+    m_loop_pts_base = 0.0;
+    m_last_pts_gl   = 0.0;
+
+    // Extract container duration (may be AV_NOPTS_VALUE for some formats)
+    m_duration_sec = 0.0;
+    if (m_fmt_ctx->duration != AV_NOPTS_VALUE)
+        m_duration_sec = (double)m_fmt_ctx->duration / AV_TIME_BASE;
 
     m_worker = std::thread(&VideoSource::decode_loop, this);
     SDL_Log("[VideoSource] Opened %s (%dx%d)", path.c_str(), m_width, m_height);
@@ -212,6 +218,10 @@ bool VideoSource::upload_next_frame(GLuint texture_id) {
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, df.width, df.height,
                         GL_RGBA, GL_UNSIGNED_BYTE, df.data.data());
         glBindTexture(GL_TEXTURE_2D, 0);
+        // Track display position (mod duration for looping sources)
+        m_last_pts_gl = (m_duration_sec > 0)
+            ? std::fmod(df.pts_sec, m_duration_sec)
+            : df.pts_sec;
         return true;
     }
 

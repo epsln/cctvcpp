@@ -57,6 +57,14 @@ public:
 
     int pass_count() const { return (int)m_passes.size(); }
 
+    // For JSON bridge: snapshot of current pass list
+    struct PassInfo { std::string id, shader; bool enabled; };
+    std::vector<PassInfo> pass_list() const {
+        std::vector<PassInfo> out;
+        for (auto& p : m_passes) out.push_back({p.id, p.name, p.enabled});
+        return out;
+    }
+
 private:
     void build_screen_quad();
     void render_pass(const ShaderPass& pass, GLuint input_tex,

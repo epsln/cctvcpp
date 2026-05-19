@@ -2,6 +2,7 @@
 #include "video_source.h"
 #include "shader_manager.h"
 #include "render_pipeline.h"
+#include "json_bridge.h"
 
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
@@ -23,7 +24,11 @@ struct Config {
     int   height     = 720;
     int   target_fps = 60;
     std::string video_path;
-    std::string shader_dir = "shaders/";
+    std::string shader_dir  = "shaders/";
+    std::string state_json  = "vj_state.json";
+    std::string cmd_json    = "vj_commands.json";
+    // How often to write state (every N frames; 0 = every frame)
+    int   bridge_interval = 6;  // ~10 Hz at 60fps
 };
 
 // ─────────────────────────────────────────────
@@ -155,6 +160,10 @@ int main(int argc, char* argv[]) {
     else
         SDL_Log("[main] No video file provided; rendering black source.");
 
+    // ─── JSON bridge (RL agent I/O) ───────────
+    JsonBridge bridge(cfg.state_json, cfg.cmd_json);
+    int bridge_frame_ctr = 0;
+
     // ─── Timing ──────────────────────────────
     Uint64 perf_freq  = SDL_GetPerformanceFrequency();
     Uint64 last_tick  = SDL_GetPerformanceCounter();
@@ -268,13 +277,37 @@ int main(int argc, char* argv[]) {
         last_tick   = now;
         time_sec   += dt;
 
-        // Simulated crowd state (replace with real RL output)
+        // Simulated crowd state (replace with real RL output / sensor feed)
         CrowdState crowd = sim_crowd(time_sec);
+
+        // ─── Read commands from RL agent ─────────
+        for (auto& cmd : bridge.read_commands()) {
+            if (cmd.type == CommandType::SET_SOURCE) {
+                // SET_SOURCE is handled here, not by the pipeline
+                if (!cmd.source_path.empty()) {
+                    source.close();
+                    if (source.open(cmd.source_path))
+                        SDL_Log("[Bridge] Switched source: %s", cmd.source_path.c_str());
+                    else
+                        SDL_Log("[Bridge] Failed to open: %s", cmd.source_path.c_str());
+                }
+            } else {
+                pipeline.push_command(cmd);
+            }
+        }
 
         // Render
         RenderStats stats = pipeline.render(source, time_sec, crowd);
 
         SDL_GL_SwapWindow(window);
+
+        // ─── Write state to JSON (throttled) ─────
+        if (cfg.bridge_interval <= 1 || (++bridge_frame_ctr % cfg.bridge_interval) == 0) {
+            BridgeState bs = make_bridge_state(
+                stats, crowd, source, pipeline,
+                SDL_GetTicks64() / 1000.0);
+            bridge.write_state(bs);
+        }
 
         // Print stats every 5 seconds
         if ((int)(time_sec) % 5 == 0 && dt < 0.02f) {
