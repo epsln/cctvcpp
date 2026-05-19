@@ -3,6 +3,11 @@
 *.mp4
 cctvcpp
 cmake_install.cmake
+poetry.lock
 CMakeCache.txt
 CMakeFiles/
+videos/
+checkpoints/
 build/
+__pycache__/
+vj_state.json
