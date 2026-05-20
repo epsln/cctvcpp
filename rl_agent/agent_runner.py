@@ -1,127 +1,131 @@
 """
-agent_runner.py
-───────────────
-Top-level runner for the hierarchical VJ RL agent.
+agent_runner.py  (v2 — online, audio-conditioned, frame capture)
+─────────────────────────────────────────────────────────────────
+Runs alongside the C++ VJ engine. Connects:
+  AudioPipeline     → reads DJ set, emits audio features + emotion
+  VisualEmotion     → captures rendered frames, emits visual emotion
+  LowLevelAgent     → 2 Hz, issues shader/source commands
+  HighLevelAgent    → 0.1 Hz, sets goals
 
 Usage:
-  python3 agent_runner.py --media_dir /path/to/videos \
-                          --state_json vj_state.json  \
-                          --cmd_json   vj_commands.json
-
-The runner:
-  1. Reads vj_state.json at ~10 Hz
-  2. Every 10 s  → high-level policy decides the goal
-  3. Every 0.5 s → low-level policy issues engine commands
-  4. Commands are written to vj_commands.json (atomic)
-  5. Weights are saved to checkpoints/ periodically
-
-Designed to run *alongside* the C++ engine process.
-The two processes communicate only through the JSON files.
+  python3 agent_runner.py \\
+    --audio    djset.mp3 \\
+    --media    /path/to/videos \\
+    --state    vj_state.json \\
+    --commands vj_commands.json \\
+    --win_x 0 --win_y 0 --win_w 1280 --win_h 720
 """
 
-import argparse
-import time
-import os
-import json
-import sys
-
-from shared_types import EngineState, CommandBatch, atomic_write_json, read_json_safe
-from high_level_agent import HighLevelAgent
+import argparse, os, time
+from shared_types    import EngineState, CommandBatch, atomic_write_json, read_json_safe
+from audio_pipeline  import AudioPipeline, AudioFeatures
+from visual_emotion  import VisualEmotionEstimator
 from low_level_agent import LowLevelAgent
+from high_level_agent import HighLevelAgent
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 
 def parse_args():
-    p = argparse.ArgumentParser()
-    p.add_argument("--media_dir",  default="assets",          help="Directory with video/image files")
-    p.add_argument("--state_json", default="vj_state.json",   help="Path engine writes state to")
-    p.add_argument("--cmd_json",   default="vj_commands.json",help="Path agent writes commands to")
-    p.add_argument("--checkpoints",default="checkpoints",     help="Directory for weight saves")
-    p.add_argument("--no_train",   action="store_true",        help="Disable weight updates (eval mode)")
-    p.add_argument("--poll_hz",    type=float, default=20.0,  help="How often to poll state file (Hz)")
+    p=argparse.ArgumentParser()
+    p.add_argument("--audio",    required=True)
+    p.add_argument("--media",    default="assets")
+    p.add_argument("--state",    default="vj_state.json")
+    p.add_argument("--commands", default="vj_commands.json")
+    p.add_argument("--checkpoints", default="checkpoints")
+    p.add_argument("--poll_hz",  type=float, default=20.0)
+    # Window capture geometry
+    p.add_argument("--win_x",  type=int, default=0)
+    p.add_argument("--win_y",  type=int, default=0)
+    p.add_argument("--win_w",  type=int, default=1280)
+    p.add_argument("--win_h",  type=int, default=720)
+    # Frame file fallback (C++ writes this if screen capture not possible)
+    p.add_argument("--frame_file", default="vj_frame.png")
+    p.add_argument("--device", default="cpu")
     return p.parse_args()
 
 
-def read_state(path: str) -> EngineState | None:
-    d = read_json_safe(path)
-    if d is None:
-        return None
-    return EngineState.from_dict(d)
+def read_state(path):
+    d=read_json_safe(path)
+    return EngineState.from_dict(d) if d else None
 
-
-def write_commands(path: str, batch: CommandBatch) -> None:
+def write_commands(path, batch):
     atomic_write_json(path, batch.to_dict())
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-
 def main():
-    args = parse_args()
+    args=parse_args()
     os.makedirs(args.checkpoints, exist_ok=True)
 
-    print(f"[Runner] Watching state: {args.state_json}")
-    print(f"[Runner] Writing commands: {args.cmd_json}")
-    print(f"[Runner] Media dir: {args.media_dir}")
-    print(f"[Runner] Checkpoints: {args.checkpoints}")
+    print("[Runner] Initialising audio pipeline ...")
+    audio=AudioPipeline(args.audio, device=args.device)
 
-    high = HighLevelAgent(
-        weights_path  = os.path.join(args.checkpoints, "high_level"),
-        step_interval = 10.0,
-    )
-    low = LowLevelAgent(
-        media_dir     = args.media_dir,
-        weights_path  = os.path.join(args.checkpoints, "low_level"),
-        step_interval = 0.5,
-    )
+    print("[Runner] Initialising visual emotion estimator ...")
+    visual_emo=VisualEmotionEstimator(device=args.device, update_interval_sec=1.5)
 
-    poll_interval = 1.0 / args.poll_hz
-    last_frame    = -1
-    state         = EngineState()   # last known state
+    high=HighLevelAgent(
+        weights_path=os.path.join(args.checkpoints,"high_level"),
+        device=args.device)
+    low=LowLevelAgent(
+        media_dir=args.media,
+        weights_path=os.path.join(args.checkpoints,"low_level"),
+        device=args.device)
 
-    print("[Runner] Starting loop. Ctrl-C to stop.")
+    audio.start()
+    print("[Runner] Loop started. Ctrl-C to stop.")
+
+    poll_dt    = 1.0/args.poll_hz
+    last_frame = -1
+    state      = EngineState()
+    af         = AudioFeatures()
+    v_arousal  = 0.0; v_valence = 0.0
+    pil_frame  = None
+
     try:
         while True:
-            loop_start = time.time()
+            t0=time.time()
 
-            # ── 1. Read state ──────────────────────────────────────────────
-            new_state = read_state(args.state_json)
-            if new_state is not None and new_state.frame_number != last_frame:
-                new_state.last_ll_t = state.last_ll_t
-                state      = new_state
-                last_frame = state.frame_number
-                high.observe(state)   # keep history buffer fresh
+            # 1. Read engine state
+            s=read_state(args.state)
+            if s is not None and s.frame_number!=last_frame:
+                state=s; last_frame=s.frame_number
+                high.observe(state, af)
 
-            # ── 2. High-level step (slow) ──────────────────────────────────
+            # 2. Grab latest audio features
+            af=audio.get_latest()
+
+            # 3. Capture frame + update visual emotion
+            pil_frame=visual_emo.capture_window(
+                args.win_x, args.win_y, args.win_w, args.win_h)
+            if pil_frame is None:
+                pil_frame=visual_emo.capture_from_file(args.frame_file)
+            if pil_frame is not None:
+                v_arousal, v_valence=visual_emo.estimate(pil_frame)
+
+            # 4. High-level step
             if high.should_step():
-                goal = high.step(state)
+                goal=high.step(state, af)
                 low.set_goal(goal)
-                print(f"[Runner] HighLevel goal → {goal}")
+                print(f"[Runner] HL goal → {goal}")
 
-            # ── 3. Low-level step (fast) ───────────────────────────────────
+            # 5. Low-level step
             if low.should_step():
-                batch = low.step(state)
+                batch=low.step(state, af, v_arousal, v_valence, pil_frame)
                 if batch.commands:
-                    write_commands(args.cmd_json, batch)
-                    print(f"[Runner] LowLevel → {len(batch.commands)} command(s): "
+                    write_commands(args.commands, batch)
+                    print(f"[Runner] LL → "
                           + ", ".join(c.get("type","?") for c in batch.commands))
-                    state.last_ll_t = 0
-                else:
-                    state.last_ll_t += 100
 
-            # ── 4. Rate-limit ──────────────────────────────────────────────
-            elapsed = time.time() - loop_start
-            sleep_t = poll_interval - elapsed
-            if sleep_t > 0:
-                time.sleep(sleep_t)
+            # 6. Rate limit
+            elapsed=time.time()-t0
+            sleep=poll_dt-elapsed
+            if sleep>0: time.sleep(sleep)
 
     except KeyboardInterrupt:
-        print("\n[Runner] Interrupted. Saving weights...")
-        high.policy.save(os.path.join(args.checkpoints, "high_level"))
-        low.policy.save(os.path.join(args.checkpoints, "low_level"))
-        print(f"[Runner] Done. HighLevel total reward: {high.total_reward:.2f}  "
-              f"LowLevel total reward: {low.total_reward:.2f}")
+        print("\n[Runner] Saving ...")
+        audio.stop()
+        high.trainer.save(os.path.join(args.checkpoints,"high_level"))
+        low.trainer.save(os.path.join(args.checkpoints,"low_level"))
+        print(f"[Runner] Done.  HL={high.total_reward:.1f}  LL={low.total_reward:.1f}")
 
 
-if __name__ == "__main__":
+if __name__=="__main__":
     main()

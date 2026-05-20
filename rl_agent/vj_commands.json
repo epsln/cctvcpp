@@ -1,0 +1,49 @@
+{
+  "commands": [
+    {
+      "type": "ADD_PASS",
+      "pass_id": "rl_bloom",
+      "shader_name": "bloom",
+      "position": -1,
+      "enabled": true,
+      "uniform_name": "",
+      "uniform_type": "float",
+      "uniform_value": 0.0,
+      "source_path": ""
+    },
+    {
+      "type": "SET_UNIFORM",
+      "pass_id": "rl_bloom",
+      "shader_name": "",
+      "position": -1,
+      "enabled": true,
+      "uniform_name": "uThreshold",
+      "uniform_type": "float",
+      "uniform_value": 0.55,
+      "source_path": ""
+    },
+    {
+      "type": "SET_UNIFORM",
+      "pass_id": "rl_bloom",
+      "shader_name": "",
+      "position": -1,
+      "enabled": true,
+      "uniform_name": "uIntensity",
+      "uniform_type": "float",
+      "uniform_value": 1.2,
+      "source_path": ""
+    },
+    {
+      "type": "SET_UNIFORM",
+      "pass_id": "rl_bloom",
+      "shader_name": "",
+      "position": -1,
+      "enabled": true,
+      "uniform_name": "uRadius",
+      "uniform_type": "int",
+      "uniform_value": 6,
+      "source_path": ""
+    }
+  ],
+  "agent_level": "low"
+}
