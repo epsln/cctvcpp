@@ -9,5 +9,10 @@ CMakeFiles/
 media/
 checkpoints/
 build/
+mlflow.db
 __pycache__/
 vj_state.json
+mlruns/
+*.ppm
+*.sqlite
+vj_shader_registry.json
