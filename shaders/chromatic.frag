@@ -23,14 +23,14 @@ vec2 barrel(vec2 uv, float k) {
 void main() {
     // Modulate strength with crowd energy
     float str    = uStrength * (1.0 + uEnergy * 2.0);
-    float barrel = uBarrel   * (1.0 + uPulse  * 0.5);
+    float bar = uBarrel   * (1.0 + uPulse  * 0.5);
 
     vec2 center  = vec2(0.5);
     vec2 dir     = normalize(vUV - center + 0.001);
 
-    vec2 uvR = barrel(vUV + dir * str,        barrel);
-    vec2 uvG = barrel(vUV,                    barrel);
-    vec2 uvB = barrel(vUV - dir * str,        barrel);
+    vec2 uvR = barrel(vUV + dir * str,        bar);
+    vec2 uvG = barrel(vUV,                    bar);
+    vec2 uvB = barrel(vUV - dir * str,        bar);
 
     float r = texture(uTex, uvR).r;
     float g = texture(uTex, uvG).g;
