@@ -92,15 +92,35 @@ class VisualEmotionEstimator:
 
     def _load(self):
         try:
-            from transformers import CLIPModel, CLIPTokenizer, CLIPImageProcessor
+            from transformers import CLIPModel, CLIPTokenizer
             print(f"[VisualEmotion] Loading {self.CLIP_MODEL} ...")
 
-            # Load tokenizer and image processor explicitly by class — avoids the
-            # AutoProcessor image_processor_type discovery bug in transformers >= 4.x
             self._tokenizer = CLIPTokenizer.from_pretrained(self.CLIP_MODEL)
-            self._image_proc = CLIPImageProcessor.from_pretrained(self.CLIP_MODEL)
-            self._model = CLIPModel.from_pretrained(self.CLIP_MODEL).to(self.device)
+            self._model     = CLIPModel.from_pretrained(self.CLIP_MODEL).to(self.device)
             self._model.eval()
+
+            # Image processor: try each option in order of preference.
+            # CLIPImageProcessorPil is the PIL-native path (no torchvision needed).
+            # CLIPFeatureExtractor is the legacy alias that also works without torchvision.
+            self._image_proc = None
+            for cls_name in (
+                "CLIPImageProcessorPil",   # transformers >= 4.35, PIL-native
+                "CLIPFeatureExtractor",    # legacy alias, always PIL-based
+                "CLIPImageProcessor",      # needs torchvision, try last
+            ):
+                try:
+                    import importlib
+                    mod = importlib.import_module("transformers")
+                    cls = getattr(mod, cls_name)
+                    self._image_proc = cls.from_pretrained(self.CLIP_MODEL)
+                    print(f"[VisualEmotion] Using {cls_name}")
+                    break
+                except Exception:
+                    continue
+
+            if self._image_proc is None:
+                raise RuntimeError("No usable CLIP image processor found")
+
             self._anchor_embeds = self._embed_texts(ANCHOR_TEXTS)
             print(f"[VisualEmotion] Ready. {len(ANCHOR_TEXTS)} anchors embedded.")
             self._loaded = True
@@ -112,13 +132,13 @@ class VisualEmotionEstimator:
         inputs = self._tokenizer(
             texts, return_tensors="pt", padding=True, truncation=True
         ).to(self.device)
-        embeds = self._model.get_text_features(**inputs).pooler_output
+        embeds = self._model.get_text_features(**inputs)
         return F.normalize(embeds, dim=-1)   # (N, D)
 
     @torch.no_grad()
     def _embed_image(self, pil_image) -> torch.Tensor:
         inputs = self._image_proc(images=pil_image, return_tensors="pt").to(self.device)
-        embed  = self._model.get_image_features(**inputs).pooler_output
+        embed  = self._model.get_image_features(**inputs)
         return F.normalize(embed, dim=-1)    # (1, D)
 
     # ── Main interface ───────────────────────────────────────────────────────

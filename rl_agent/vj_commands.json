@@ -2,8 +2,8 @@
   "commands": [
     {
       "type": "ADD_PASS",
-      "pass_id": "rl_bloom",
-      "shader_name": "bloom",
+      "pass_id": "rl_color_grade",
+      "shader_name": "color_grade",
       "position": -1,
       "enabled": true,
       "uniform_name": "",
@@ -13,35 +13,35 @@
     },
     {
       "type": "SET_UNIFORM",
-      "pass_id": "rl_bloom",
+      "pass_id": "rl_color_grade",
       "shader_name": "",
       "position": -1,
       "enabled": true,
-      "uniform_name": "uThreshold",
+      "uniform_name": "uSaturation",
       "uniform_type": "float",
-      "uniform_value": 0.55,
+      "uniform_value": 1.3,
       "source_path": ""
     },
     {
       "type": "SET_UNIFORM",
-      "pass_id": "rl_bloom",
+      "pass_id": "rl_color_grade",
       "shader_name": "",
       "position": -1,
       "enabled": true,
-      "uniform_name": "uIntensity",
+      "uniform_name": "uContrast",
       "uniform_type": "float",
-      "uniform_value": 1.2,
+      "uniform_value": 1.1,
       "source_path": ""
     },
     {
       "type": "SET_UNIFORM",
-      "pass_id": "rl_bloom",
+      "pass_id": "rl_color_grade",
       "shader_name": "",
       "position": -1,
       "enabled": true,
-      "uniform_name": "uRadius",
-      "uniform_type": "int",
-      "uniform_value": 6,
+      "uniform_name": "uHueShift",
+      "uniform_type": "float",
+      "uniform_value": 5.0,
       "source_path": ""
     }
   ],

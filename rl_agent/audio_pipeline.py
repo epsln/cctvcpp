@@ -130,8 +130,6 @@ class EmotionModel:
                         self.wav2vec2 = Wav2Vec2Model(config)
                         self.classifier = RegressionHead(config)
                         self.init_weights()
-                        self.post_init()
-
                     def forward(self, input_values):
                         outputs = self.wav2vec2(input_values)
                         hidden = outputs.last_hidden_state.mean(dim=1)
